@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BooksPad System Access</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            padding: 20px;
+            background-color: #f0f0f0;
+            text-align: center;
+        }
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        h2 { margin-top: 0; font-size: 1.2rem; }
+        a.btn {
+            display: block;
+            width: 100%;
+            padding: 15px 0;
+            margin: 10px 0;
+            background-color: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        a.btn.danger { background-color: #dc3545; }
+        a.btn.success { background-color: #28a745; }
+        .input-group {
+            display: flex;
+            margin-top: 10px;
+        }
+        input {
+            flex: 1;
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+        }
+        button.copy {
+            padding: 10px;
+            background: #6c757d;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        p.note { font-size: 0.8rem; color: #666; text-align: left; }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <h2>📂 嘗試存取檔案系統</h2>
+        <p class="note">注意：若點擊無反應，請複製路徑貼到網址列。</p>
+        
+        <a href="file:///storage/emulated/0/" class="btn">開啟 /storage/emulated/0/</a>
+        
+        <a href="file:///sdcard/" class="btn">開啟 /sdcard/</a>
+        
+        <div class="input-group">
+            <input type="text" value="file:///storage/emulated/0/" id="path1" readonly>
+            <button class="copy" onclick="copyText('path1')">複製</button>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>⚙️ 嘗試強制跳轉設定 (Intent)</h2>
+        <p class="note">如果 file:// 被封鎖，請嘗試這些指令直接呼叫系統 App。</p>
+
+        <a href="intent:#Intent;component=com.android.settings/.Settings;end" class="btn danger">
+            打開系統設定 (Settings)
+        </a>
+
+        <a href="intent:#Intent;action=android.intent.action.VIEW_DOWNLOADS;end" class="btn success">
+            打開下載管理員
+        </a>
+        
+        <a href="intent:#Intent;component=com.android.settings/.wifi.WifiSettings;end" class="btn">
+            打開 Wi-Fi 設定
+        </a>
+    </div>
+
+    <script>
+        function copyText(elementId) {
+            var copyText = document.getElementById(elementId);
+            copyText.select();
+            copyText.setSelectionRange(0, 99999); 
+            navigator.clipboard.writeText(copyText.value).then(function() {
+                alert("已複製！請長按網址列貼上");
+            }, function() {
+                alert("複製失敗，請手動選取文字");
+            });
+        }
+    </script>
+</body>
+</html>
