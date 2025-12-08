@@ -3,156 +3,91 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BooksPad Netronix Breakout</title>
+    <title>BooksPad Intent Scanner</title>
     <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background-color: #ffffff;
-            color: #000000;
-            padding: 15px;
-            text-align: center;
-        }
-        h1 { font-size: 1.4rem; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 20px; }
-        
-        .section {
-            border: 2px solid #000;
-            border-radius: 8px;
-            margin-bottom: 25px;
-            padding: 15px;
-            background: #f4f4f4;
-            text-align: left;
-        }
-        
-        h2 { 
-            font-size: 1.1rem; 
-            margin-top: 0; 
-            background: #ddd; 
-            padding: 8px; 
-            border-bottom: 1px solid #999;
-            text-align: center;
-        }
-        
-        /* Netronix 專區特別標示 */
-        .section.netronix { border-color: #d63384; background: #fff0f6; }
-        .section.netronix h2 { background: #d63384; color: #fff; }
-
-        /* 大按鈕樣式 */
+        body { font-family: monospace; padding: 10px; background: #f0f0f0; }
+        h1 { font-size: 16px; text-align: center; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         a.btn {
             display: block;
-            width: 100%;
-            margin: 10px 0;
-            padding: 18px 10px;
-            text-decoration: none;
-            font-size: 16px;
-            font-weight: bold;
-            border-radius: 6px;
-            border: 1px solid #000;
-            color: #000;
+            padding: 15px 5px;
             background: #fff;
-            box-shadow: 0 2px 0 #000;
-            box-sizing: border-box;
+            border: 1px solid #999;
+            text-decoration: none;
+            color: #000;
             text-align: center;
+            font-size: 12px;
+            border-radius: 4px;
+            word-break: break-all;
         }
-        a.btn:active { background: #000; color: #fff; transform: translateY(2px); box-shadow: none; }
-        
-        /* 功能分類顏色 */
-        .btn.debug { border-color: #d63384; color: #d63384; }
-        .btn.file { border-color: #0d6efd; color: #0d6efd; }
-        
-        /* 檔案上傳偽裝按鈕 */
-        .upload-wrapper {
-            position: relative;
-            overflow: hidden;
-            display: inline-block;
-            width: 100%;
-        }
-        .upload-wrapper input[type=file] {
-            font-size: 100px;
-            position: absolute;
-            left: 0; top: 0;
-            opacity: 0;
-            cursor: pointer;
-            width: 100%; height: 100%;
-        }
-        
-        .note { font-size: 12px; color: #666; margin-top: 5px; text-align: center; display: block; }
+        a.btn:active { background: #000; color: #fff; }
+        a.btn.visited { background: #ddd; color: #555; }
+        .category { grid-column: span 2; font-weight: bold; margin-top: 15px; border-bottom: 2px solid #555; }
     </style>
 </head>
 <body>
 
-    <h1>BooksPad (Netronix) 越獄工具</h1>
+    <h1>系統入口盲測器</h1>
+    <p style="text-align:center; font-size:12px;">點擊後若有反應，請記下是哪一個。</p>
 
-    <div class="section netronix">
-        <h2>🛠 Netronix 專用入口 (優先測試)</h2>
-        <p class="note">這是針對振曜代工機型的專用指令</p>
-        
-        <a href="intent:#Intent;component=com.netronix.settings/.SettingsActivity;end" class="btn debug">
-            Netronix 設定 (SettingsActivity)
-        </a>
-        <a href="intent:#Intent;component=com.netronix.settings/.DebugActivity;end" class="btn debug">
-            Netronix 除錯 (DebugActivity)
-        </a>
-        <a href="intent:#Intent;component=com.netronix.settings/.EInkSettingsActivity;end" class="btn debug">
-            電子紙設定 (EInkSettings)
-        </a>
-        <a href="intent:#Intent;action=android.intent.action.MAIN;component=com.fp.factorytest/.FactoryTest;end" class="btn debug">
-            工廠測試模式 (Factory Test)
-        </a>
-        <a href="intent:#Intent;component=com.android.settings/.DevelopmentSettings;end" class="btn debug">
-            🔓 直接開啟開發者選項 (繞過密碼)
-        </a>
-    </div>
-
-    <div class="section">
-        <h2>📂 檔案誘騙 (必測)</h2>
-        <p class="note">點擊後若跳出檔案視窗，請<b>長按</b> APK 進行安裝</p>
-
-        <div class="upload-wrapper">
-            <a class="btn file">🚀 1. 觸發檔案選擇器 (File Picker)</a>
-            <input type="file" onchange="alert('成功！請試著長按檔案開啟選單。')">
-        </div>
-
-        <a href="intent:#Intent;action=android.intent.action.GET_CONTENT;type=*/*;category=android.intent.category.OPENABLE;end" class="btn file">
-            🚀 2. 強制呼叫 GET_CONTENT
-        </a>
-        
-        <a href="intent:#Intent;component=com.android.documentsui/.files.FilesActivity;end" class="btn file">
-            🚀 3. 原生 DocumentsUI
-        </a>
-    </div>
-
-    <div class="section">
-        <h2>⚙️ 系統設定備案</h2>
-        
-        <a href="intent:#Intent;action=android.settings.SETTINGS;end" class="btn">
-            Android 原生設定總覽
-        </a>
-        <a href="intent:#Intent;action=android.settings.MANAGE_UNKNOWN_APP_SOURCES;end" class="btn">
-            安裝未知應用程式權限
-        </a>
-        <a href="intent:#Intent;action=android.settings.INTERNAL_STORAGE_SETTINGS;end" class="btn">
-            儲存空間設定
-        </a>
-    </div>
-
-    <div class="section">
-        <h2>🌍 本機路徑 (複製用)</h2>
-        <p class="note">點擊複製，然後長按網址列貼上</p>
-        
-        <button onclick="copy('file:///storage/emulated/0/')" class="btn">複製 /storage/emulated/0/</button>
-        <button onclick="copy('file:///sdcard/')" class="btn">複製 /sdcard/</button>
-    </div>
+    <div id="container" class="grid"></div>
 
     <script>
-        function copy(text) {
-            var input = document.createElement('input');
-            input.setAttribute('value', text);
-            document.body.appendChild(input);
-            input.select();
-            document.execCommand('copy');
-            document.body.removeChild(input);
-            alert('已複製路徑：' + text + '\n請長按網址列貼上');
-        }
+        // 定義我們要掃描的目標
+        const targets = [
+            // --- 核心目標：開發者選項與 USB ---
+            { cat: "🔥 核心破解 (優先測試)" },
+            { name: "直接進開發者選項 (Activity)", uri: "intent:#Intent;component=com.android.settings/.DevelopmentSettings;end" },
+            { name: "USB 連接模式", uri: "intent:#Intent;component=com.android.settings/.UsbSettings;end" },
+            { name: "USB 偵錯設定", uri: "intent:#Intent;action=android.settings.APPLICATION_DEVELOPMENT_SETTINGS;end" },
+            { name: "完整系統設定 (原生)", uri: "intent:#Intent;component=com.android.settings/.Settings;end" },
+            
+            // --- Allwinner / 工程模式特區 ---
+            { cat: "🛠 Allwinner/工程模式" },
+            { name: "測試模式 (Testing)", uri: "intent:#Intent;action=android.intent.action.MAIN;component=com.android.settings/.TestingSettings;end" },
+            { name: "工程模式 (Factory)", uri: "intent:#Intent;component=com.android.settings/.factory.FactorySettings;end" },
+            { name: "Softwinner Launcher", uri: "intent:#Intent;component=com.softwinner.launcher/.Launcher;end" },
+            { name: "Onyx/Boyue 設定", uri: "intent:#Intent;component=com.onyx.android.settings/.SettingsActivity;end" },
+            
+            // --- 應用程式與權限 ---
+            { cat: "📦 應用程式管理" },
+            { name: "應用程式列表 (All Apps)", uri: "intent:#Intent;action=android.settings.MANAGE_ALL_APPLICATIONS_SETTINGS;end" },
+            { name: "特殊存取權 (Special Access)", uri: "intent:#Intent;action=android.settings.SPECIAL_APP_ACCESS_SETTINGS;end" },
+            { name: "安裝未知應用 (Unknown Src)", uri: "intent:#Intent;action=android.settings.MANAGE_UNKNOWN_APP_SOURCES;end" },
+            { name: "覆蓋顯示權限 (Overlay)", uri: "intent:#Intent;action=android.settings.action.MANAGE_OVERLAY_PERMISSION;end" },
+
+            // --- 檔案與儲存 ---
+            { cat: "📂 檔案與儲存" },
+            { name: "儲存空間設定", uri: "intent:#Intent;action=android.settings.INTERNAL_STORAGE_SETTINGS;end" },
+            { name: "下載管理員 (View)", uri: "intent:#Intent;action=android.intent.action.VIEW_DOWNLOADS;end" },
+            { name: "檔案選擇 (Get Content)", uri: "intent:#Intent;action=android.intent.action.GET_CONTENT;type=*/*;end" },
+            { name: "DocumentsUI (原生)", uri: "intent:#Intent;component=com.android.documentsui/.files.FilesActivity;end" },
+
+            // --- 其他可能入口 ---
+            { cat: "🔍 其他入口" },
+            { name: "關於平板 (About)", uri: "intent:#Intent;action=android.settings.DEVICE_INFO_SETTINGS;end" },
+            { name: "語言與輸入法", uri: "intent:#Intent;action=android.settings.INPUT_METHOD_SETTINGS;end" },
+            { name: "首頁 (Home)", uri: "intent:#Intent;action=android.intent.action.MAIN;category=android.intent.category.HOME;end" },
+            { name: "搜尋 (Search)", uri: "intent:#Intent;action=android.intent.action.WEB_SEARCH;end" }
+        ];
+
+        const container = document.getElementById('container');
+
+        targets.forEach(t => {
+            if (t.cat) {
+                let div = document.createElement('div');
+                div.className = 'category';
+                div.innerText = t.cat;
+                container.appendChild(div);
+            } else {
+                let a = document.createElement('a');
+                a.className = 'btn';
+                a.href = t.uri;
+                a.innerText = t.name;
+                a.onclick = function() { this.classList.add('visited'); };
+                container.appendChild(a);
+            }
+        });
     </script>
 </body>
 </html>
