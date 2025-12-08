@@ -3,155 +3,61 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BooksPad Netronix Breakout</title>
+    <title>JS Bridge Scanner</title>
     <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background-color: #ffffff;
-            color: #000000;
-            padding: 15px;
-            text-align: center;
-        }
-        h1 { font-size: 1.4rem; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 20px; }
-        
-        .section {
-            border: 2px solid #000;
-            border-radius: 8px;
-            margin-bottom: 25px;
-            padding: 15px;
-            background: #f4f4f4;
-            text-align: left;
-        }
-        
-        h2 { 
-            font-size: 1.1rem; 
-            margin-top: 0; 
-            background: #ddd; 
-            padding: 8px; 
-            border-bottom: 1px solid #999;
-            text-align: center;
-        }
-        
-        /* Netronix 專區特別標示 */
-        .section.netronix { border-color: #d63384; background: #fff0f6; }
-        .section.netronix h2 { background: #d63384; color: #fff; }
-
-        /* 大按鈕樣式 */
-        a.btn {
-            display: block;
-            width: 100%;
-            margin: 10px 0;
-            padding: 18px 10px;
-            text-decoration: none;
-            font-size: 16px;
-            font-weight: bold;
-            border-radius: 6px;
-            border: 1px solid #000;
-            color: #000;
-            background: #fff;
-            box-shadow: 0 2px 0 #000;
-            box-sizing: border-box;
-            text-align: center;
-        }
-        a.btn:active { background: #000; color: #fff; transform: translateY(2px); box-shadow: none; }
-        
-        /* 功能分類顏色 */
-        .btn.debug { border-color: #d63384; color: #d63384; }
-        .btn.file { border-color: #0d6efd; color: #0d6efd; }
-        
-        /* 檔案上傳偽裝按鈕 */
-        .upload-wrapper {
-            position: relative;
-            overflow: hidden;
-            display: inline-block;
-            width: 100%;
-        }
-        .upload-wrapper input[type=file] {
-            font-size: 100px;
-            position: absolute;
-            left: 0; top: 0;
-            opacity: 0;
-            cursor: pointer;
-            width: 100%; height: 100%;
-        }
-        
-        .note { font-size: 12px; color: #666; margin-top: 5px; text-align: center; display: block; }
+        body { font-family: monospace; padding: 15px; background: #222; color: #0f0; }
+        h1 { border-bottom: 1px solid #0f0; }
+        .found { color: #ff0; font-weight: bold; font-size: 1.2em; margin: 10px 0; border: 1px solid #ff0; padding: 5px; }
+        .method { margin-left: 20px; color: #0ff; }
+        button { font-size: 20px; padding: 10px; width: 100%; margin-bottom: 20px; }
     </style>
 </head>
 <body>
-
-    <h1>BooksPad (Netronix) 越獄工具</h1>
-
-    <div class="section netronix">
-        <h2>🛠 Netronix 專用入口 (優先測試)</h2>
-        <p class="note">這是針對振曜代工機型的專用指令</p>
-        
-        <a href="intent:#Intent;component=com.netronix.settings/.SettingsActivity;end" class="btn debug">
-            Netronix 設定 (SettingsActivity)
-        </a>
-        <a href="intent:#Intent;component=com.netronix.settings/.DebugActivity;end" class="btn debug">
-            Netronix 除錯 (DebugActivity)
-        </a>
-        <a href="intent:#Intent;component=com.netronix.settings/.EInkSettingsActivity;end" class="btn debug">
-            電子紙設定 (EInkSettings)
-        </a>
-        <a href="intent:#Intent;action=android.intent.action.MAIN;component=com.fp.factorytest/.FactoryTest;end" class="btn debug">
-            工廠測試模式 (Factory Test)
-        </a>
-        <a href="intent:#Intent;component=com.android.settings/.DevelopmentSettings;end" class="btn debug">
-            🔓 直接開啟開發者選項 (繞過密碼)
-        </a>
-    </div>
-
-    <div class="section">
-        <h2>📂 檔案誘騙 (必測)</h2>
-        <p class="note">點擊後若跳出檔案視窗，請<b>長按</b> APK 進行安裝</p>
-
-        <div class="upload-wrapper">
-            <a class="btn file">🚀 1. 觸發檔案選擇器 (File Picker)</a>
-            <input type="file" onchange="alert('成功！請試著長按檔案開啟選單。')">
-        </div>
-
-        <a href="intent:#Intent;action=android.intent.action.GET_CONTENT;type=*/*;category=android.intent.category.OPENABLE;end" class="btn file">
-            🚀 2. 強制呼叫 GET_CONTENT
-        </a>
-        
-        <a href="intent:#Intent;component=com.android.documentsui/.files.FilesActivity;end" class="btn file">
-            🚀 3. 原生 DocumentsUI
-        </a>
-    </div>
-
-    <div class="section">
-        <h2>⚙️ 系統設定備案</h2>
-        
-        <a href="intent:#Intent;action=android.settings.SETTINGS;end" class="btn">
-            Android 原生設定總覽
-        </a>
-        <a href="intent:#Intent;action=android.settings.MANAGE_UNKNOWN_APP_SOURCES;end" class="btn">
-            安裝未知應用程式權限
-        </a>
-        <a href="intent:#Intent;action=android.settings.INTERNAL_STORAGE_SETTINGS;end" class="btn">
-            儲存空間設定
-        </a>
-    </div>
-
-    <div class="section">
-        <h2>🌍 本機路徑 (複製用)</h2>
-        <p class="note">點擊複製，然後長按網址列貼上</p>
-        
-        <button onclick="copy('file:///storage/emulated/0/')" class="btn">複製 /storage/emulated/0/</button>
-        <button onclick="copy('file:///sdcard/')" class="btn">複製 /sdcard/</button>
-    </div>
+    <h1>系統後門掃描器</h1>
+    <button onclick="scanForBridges()">開始掃描 (Scan)</button>
+    <div id="log">等待掃描...</div>
 
     <script>
-        function copy(text) {
-            var input = document.createElement('input');
-            input.setAttribute('value', text);
-            document.body.appendChild(input);
-            input.select();
-            document.execCommand('copy');
-            document.body.removeChild(input);
-            alert('已複製路徑：' + text + '\n請長按網址列貼上');
+        // 這些是標準瀏覽器物件，我們要過濾掉
+        const blacklist = [
+            'window', 'self', 'document', 'name', 'location', 'customElements', 'history', 'locationbar', 'menubar', 'personalbar', 'scrollbars', 'statusbar', 'toolbar', 'status', 'closed', 'frames', 'length', 'top', 'opener', 'parent', 'frameElement', 'navigator', 'origin', 'external', 'screen', 'innerWidth', 'innerHeight', 'scrollX', 'pageXOffset', 'scrollY', 'pageYOffset', 'visualViewport', 'screenX', 'screenY', 'outerWidth', 'outerHeight', 'devicePixelRatio', 'clientInformation', 'screenLeft', 'screenTop', 'defaultStatus', 'defaultstatus', 'styleMedia', 'onsearch', 'isSecureContext', 'performance', 'onappinstalled', 'onbeforeinstallprompt', 'crypto', 'indexedDB', 'webkitStorageInfo', 'sessionStorage', 'localStorage', 'chrome', 'speechSynthesis', 'webkitRequestFileSystem', 'webkitResolveLocalFileSystemURL', 'openDatabase', 'applicationCache', 'caches'
+        ];
+
+        function scanForBridges() {
+            var log = document.getElementById('log');
+            log.innerHTML = "正在掃描 window 物件...<br>";
+            
+            var foundSomething = false;
+
+            // 遍歷 window 下的所有屬性
+            for (var prop in window) {
+                try {
+                    // 過濾掉標準屬性和事件
+                    if (blacklist.indexOf(prop) === -1 && 
+                        prop.indexOf('on') !== 0 && 
+                        prop.indexOf('webkit') === -1 &&
+                        typeof window[prop] === 'object' && 
+                        window[prop] !== null) {
+
+                        // 找到可疑物件！
+                        var html = "<div class='found'>發現可疑物件: window." + prop + "</div>";
+                        
+                        // 嘗試列出該物件的方法
+                        for (var method in window[prop]) {
+                            html += "<div class='method'> -> ." + method + "()</div>";
+                        }
+                        
+                        log.innerHTML += html;
+                        foundSomething = true;
+                    }
+                } catch (e) {}
+            }
+
+            if (!foundSomething) {
+                log.innerHTML += "<br>掃描完成，未發現明顯注入物件。<br>系統可能非常乾淨。";
+            } else {
+                log.innerHTML += "<br>掃描完成！請查看上方黃色項目。";
+            }
         }
     </script>
 </body>
