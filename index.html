@@ -3,113 +3,132 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BooksCom Bridge Exploit</title>
+    <title>PostMessage Fuzzer</title>
     <style>
-        body { font-family: monospace; padding: 10px; background: #333; color: #fff; }
-        .card { background: #444; padding: 15px; margin-bottom: 20px; border-radius: 8px; border: 1px solid #666; }
-        h2 { margin-top: 0; color: #0f0; border-bottom: 1px solid #666; padding-bottom: 5px; }
-        #methods { color: #ffeb3b; font-size: 14px; white-space: pre-wrap; }
-        input { width: 70%; padding: 10px; font-family: monospace; }
-        button { width: 25%; padding: 10px; font-weight: bold; cursor: pointer; background: #0f0; border: none; }
-        button.run { background: #f00; color: #fff; }
-        .hint { font-size: 12px; color: #ccc; margin-top: 5px; }
+        body { font-family: monospace; padding: 10px; background: #222; color: #fff; }
+        .card { border: 1px solid #555; padding: 15px; margin-bottom: 20px; border-radius: 5px; background: #333; }
+        h2 { margin-top: 0; color: #0f0; border-bottom: 1px solid #555; padding-bottom: 5px; }
+        button { width: 100%; padding: 15px; margin: 5px 0; font-size: 16px; font-weight: bold; cursor: pointer; background: #444; color: #fff; border: 1px solid #777; }
+        button:active { background: #0f0; color: #000; }
+        #log { height: 200px; overflow-y: scroll; background: #000; border: 1px solid #555; padding: 5px; font-size: 12px; white-space: pre-wrap; color: #aaa; }
+        input { width: 70%; padding: 10px; }
+        .btn-small { width: 25%; }
     </style>
 </head>
 <body>
 
+    <h1>PostMessage 盲測器</h1>
+    <div id="log">準備就緒...</div>
+
     <div class="card">
-        <h2>1. Bridge 功能列表</h2>
-        <div id="methods">正在讀取...</div>
-        <button onclick="analyzeBridge()" style="width:100%; margin-top:10px;">重新掃描</button>
+        <h2>1. 自動轟炸 (Auto Fuzz)</h2>
+        <p>點擊下方按鈕，會連續發送多種格式指令。</p>
+        
+        <button onclick="fuzzSettings()">測試 A: 開啟設定 (Settings)</button>
+        <button onclick="fuzzBrowser()">測試 B: 開啟瀏覽器 (Open URL)</button>
+        <button onclick="fuzzSystem()">測試 C: 系統指令 (Back/Home)</button>
     </div>
 
     <div class="card">
-        <h2>2. 執行指令</h2>
-        <p class="hint">請參考上方的列表，將指令輸入下方並執行。<br>例如: openUrl("http://google.com")</p>
-        
-        <input type="text" id="cmd" value='window.BooksComJsBridge.openBrowser("https://www.google.com")'>
-        <button class="run" onclick="runCmd()">發射 (Run)</button>
-        
-        <div style="margin-top:10px;">
-            <p>常用指令測試 (點擊自動填入):</p>
-            <button onclick="fill('openSettings()')" style="width:auto; background:#555; color:#fff;">openSettings</button>
-            <button onclick="fill('openBrowser(\'https://google.com\')')" style="width:auto; background:#555; color:#fff;">openBrowser</button>
-            <button onclick="fill('finish()')" style="width:auto; background:#555; color:#fff;">finish (關閉)</button>
-            <button onclick="fill('goBack()')" style="width:auto; background:#555; color:#fff;">goBack</button>
-        </div>
+        <h2>2. 手動發送</h2>
+        <input type="text" id="manualInput" value='{"action":"openSettings"}'>
+        <button class="btn-small" onclick="sendManual()">發送</button>
     </div>
 
     <script>
-        function analyzeBridge() {
-            var output = document.getElementById('methods');
-            var bridge = window.BooksComJsBridge;
-            
+        var bridge = window.BooksComJsBridge;
+        var logBox = document.getElementById('log');
+
+        function log(msg) {
+            logBox.innerHTML = "> " + msg + "\n" + logBox.innerHTML;
+        }
+
+        function send(payload) {
             if (!bridge) {
-                output.innerHTML = "❌ 錯誤：找不到 window.BooksComJsBridge\n請確認此頁面是在 BooksPad 上開啟。";
+                log("錯誤: 找不到 Bridge 物件");
                 return;
             }
-
-            var log = "✅ 發現物件: window.BooksComJsBridge\n\n[可用功能]:\n";
-            var count = 0;
-
-            // 深度掃描屬性與方法
-            var props = [];
-            // 嘗試標準遍歷
-            for (var i in bridge) { props.push(i); }
-            // 嘗試獲取自身屬性 (針對不可枚舉屬性)
             try {
-                var ownProps = Object.getOwnPropertyNames(bridge);
-                props = props.concat(ownProps);
-            } catch(e) {}
-
-            // 去除重複並排序
-            props = [...new Set(props)].sort();
-
-            props.forEach(function(prop) {
-                try {
-                    var type = typeof bridge[prop];
-                    log += "🔹 " + prop + " (" + type + ")\n";
-                    count++;
-                } catch(e) {
-                    log += "🔸 " + prop + " (未知)\n";
-                }
-            });
-
-            if (count === 0) {
-                log += "⚠️ 警告：物件存在但無法列舉屬性。\n這可能是 Java Interface 封裝。\n請直接嘗試盲測指令。";
-            }
-
-            output.innerHTML = log;
-        }
-
-        function runCmd() {
-            var cmd = document.getElementById('cmd').value;
-            try {
-                // 如果用戶沒有輸入完整路徑，自動補上前綴 (方便測試)
-                if (cmd.indexOf('window') === -1 && cmd.indexOf('(') !== -1) {
-                    // 嘗試直接執行 bridge 下的方法
-                    var funcName = cmd.split('(')[0];
-                    if (window.BooksComJsBridge[funcName]) {
-                        window.BooksComJsBridge[funcName](eval(cmd.split('(')[1].replace(')', ''))); 
-                        alert('已呼叫: ' + funcName);
-                        return;
-                    }
-                }
+                // 嘗試發送原始物件 (有些 Bridge 接受 Object)
+                // bridge.postMessage(payload); 
                 
-                // 標準 eval 執行
-                var result = eval(cmd);
-                alert("執行結果: " + result);
+                // 嘗試發送字串化 JSON (最常見)
+                var str = (typeof payload === 'object') ? JSON.stringify(payload) : payload;
+                bridge.postMessage(str);
+                
+                log("已發送: " + str);
             } catch (e) {
-                alert("執行錯誤: " + e.message);
+                log("發送失敗: " + e.message);
             }
         }
-        
-        function fill(txt) {
-            document.getElementById('cmd').value = "window.BooksComJsBridge." + txt;
+
+        // --- 測試組 A: 設定 ---
+        function fuzzSettings() {
+            log("--- 開始測試設定指令 ---");
+            const keys = ["action", "type", "cmd", "command", "event", "method"];
+            const values = ["openSettings", "settings", "setting", "wifi", "wifiSettings", "debug", "devMode"];
+            
+            // 1. 簡單字串
+            values.forEach(v => send(v));
+
+            // 2. 常見 JSON 組合
+            keys.forEach(k => {
+                values.forEach(v => {
+                    var data = {};
+                    data[k] = v;
+                    send(data);
+                });
+            });
+            
+            // 3. 博客來/App 特定猜測
+            send({"action": "open_settings"});
+            send({"func": "openSettings"});
+            send({"target": "settings"});
         }
 
-        // 自動啟動掃描
-        setTimeout(analyzeBridge, 500);
+        // --- 測試組 B: 瀏覽器 ---
+        function fuzzBrowser() {
+            log("--- 開始測試瀏覽器指令 ---");
+            const url = "https://www.google.com";
+            
+            // 常見格式
+            send({"action": "openUrl", "url": url});
+            send({"action": "openBrowser", "url": url});
+            send({"action": "link", "url": url});
+            send({"type": "open", "data": url});
+            send({"cmd": "loadUrl", "url": url});
+            
+            // 針對 Store App 常見的格式
+            send({"action": "scheme", "url": url});
+            send({"action": "external", "url": url});
+        }
+
+        // --- 測試組 C: 系統 ---
+        function fuzzSystem() {
+            log("--- 開始測試系統指令 ---");
+            const cmds = ["goBack", "back", "home", "finish", "close", "exit", "share", "copy"];
+            
+            cmds.forEach(v => {
+                send(v);
+                send({"action": v});
+                send({"type": v});
+            });
+        }
+
+        function sendManual() {
+            var val = document.getElementById('manualInput').value;
+            try {
+                // 嘗試解析為 JSON 發送，如果不是 JSON 就送字串
+                try {
+                    var obj = JSON.parse(val);
+                    send(obj);
+                } catch(e) {
+                    send(val);
+                }
+            } catch(e) {
+                log("錯誤: " + e.message);
+            }
+        }
     </script>
 </body>
 </html>
