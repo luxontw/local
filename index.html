@@ -3,91 +3,113 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BooksPad Intent Scanner</title>
+    <title>BooksCom Bridge Exploit</title>
     <style>
-        body { font-family: monospace; padding: 10px; background: #f0f0f0; }
-        h1 { font-size: 16px; text-align: center; }
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        a.btn {
-            display: block;
-            padding: 15px 5px;
-            background: #fff;
-            border: 1px solid #999;
-            text-decoration: none;
-            color: #000;
-            text-align: center;
-            font-size: 12px;
-            border-radius: 4px;
-            word-break: break-all;
-        }
-        a.btn:active { background: #000; color: #fff; }
-        a.btn.visited { background: #ddd; color: #555; }
-        .category { grid-column: span 2; font-weight: bold; margin-top: 15px; border-bottom: 2px solid #555; }
+        body { font-family: monospace; padding: 10px; background: #333; color: #fff; }
+        .card { background: #444; padding: 15px; margin-bottom: 20px; border-radius: 8px; border: 1px solid #666; }
+        h2 { margin-top: 0; color: #0f0; border-bottom: 1px solid #666; padding-bottom: 5px; }
+        #methods { color: #ffeb3b; font-size: 14px; white-space: pre-wrap; }
+        input { width: 70%; padding: 10px; font-family: monospace; }
+        button { width: 25%; padding: 10px; font-weight: bold; cursor: pointer; background: #0f0; border: none; }
+        button.run { background: #f00; color: #fff; }
+        .hint { font-size: 12px; color: #ccc; margin-top: 5px; }
     </style>
 </head>
 <body>
 
-    <h1>系統入口盲測器</h1>
-    <p style="text-align:center; font-size:12px;">點擊後若有反應，請記下是哪一個。</p>
+    <div class="card">
+        <h2>1. Bridge 功能列表</h2>
+        <div id="methods">正在讀取...</div>
+        <button onclick="analyzeBridge()" style="width:100%; margin-top:10px;">重新掃描</button>
+    </div>
 
-    <div id="container" class="grid"></div>
+    <div class="card">
+        <h2>2. 執行指令</h2>
+        <p class="hint">請參考上方的列表，將指令輸入下方並執行。<br>例如: openUrl("http://google.com")</p>
+        
+        <input type="text" id="cmd" value='window.BooksComJsBridge.openBrowser("https://www.google.com")'>
+        <button class="run" onclick="runCmd()">發射 (Run)</button>
+        
+        <div style="margin-top:10px;">
+            <p>常用指令測試 (點擊自動填入):</p>
+            <button onclick="fill('openSettings()')" style="width:auto; background:#555; color:#fff;">openSettings</button>
+            <button onclick="fill('openBrowser(\'https://google.com\')')" style="width:auto; background:#555; color:#fff;">openBrowser</button>
+            <button onclick="fill('finish()')" style="width:auto; background:#555; color:#fff;">finish (關閉)</button>
+            <button onclick="fill('goBack()')" style="width:auto; background:#555; color:#fff;">goBack</button>
+        </div>
+    </div>
 
     <script>
-        // 定義我們要掃描的目標
-        const targets = [
-            // --- 核心目標：開發者選項與 USB ---
-            { cat: "🔥 核心破解 (優先測試)" },
-            { name: "直接進開發者選項 (Activity)", uri: "intent:#Intent;component=com.android.settings/.DevelopmentSettings;end" },
-            { name: "USB 連接模式", uri: "intent:#Intent;component=com.android.settings/.UsbSettings;end" },
-            { name: "USB 偵錯設定", uri: "intent:#Intent;action=android.settings.APPLICATION_DEVELOPMENT_SETTINGS;end" },
-            { name: "完整系統設定 (原生)", uri: "intent:#Intent;component=com.android.settings/.Settings;end" },
+        function analyzeBridge() {
+            var output = document.getElementById('methods');
+            var bridge = window.BooksComJsBridge;
             
-            // --- Allwinner / 工程模式特區 ---
-            { cat: "🛠 Allwinner/工程模式" },
-            { name: "測試模式 (Testing)", uri: "intent:#Intent;action=android.intent.action.MAIN;component=com.android.settings/.TestingSettings;end" },
-            { name: "工程模式 (Factory)", uri: "intent:#Intent;component=com.android.settings/.factory.FactorySettings;end" },
-            { name: "Softwinner Launcher", uri: "intent:#Intent;component=com.softwinner.launcher/.Launcher;end" },
-            { name: "Onyx/Boyue 設定", uri: "intent:#Intent;component=com.onyx.android.settings/.SettingsActivity;end" },
-            
-            // --- 應用程式與權限 ---
-            { cat: "📦 應用程式管理" },
-            { name: "應用程式列表 (All Apps)", uri: "intent:#Intent;action=android.settings.MANAGE_ALL_APPLICATIONS_SETTINGS;end" },
-            { name: "特殊存取權 (Special Access)", uri: "intent:#Intent;action=android.settings.SPECIAL_APP_ACCESS_SETTINGS;end" },
-            { name: "安裝未知應用 (Unknown Src)", uri: "intent:#Intent;action=android.settings.MANAGE_UNKNOWN_APP_SOURCES;end" },
-            { name: "覆蓋顯示權限 (Overlay)", uri: "intent:#Intent;action=android.settings.action.MANAGE_OVERLAY_PERMISSION;end" },
-
-            // --- 檔案與儲存 ---
-            { cat: "📂 檔案與儲存" },
-            { name: "儲存空間設定", uri: "intent:#Intent;action=android.settings.INTERNAL_STORAGE_SETTINGS;end" },
-            { name: "下載管理員 (View)", uri: "intent:#Intent;action=android.intent.action.VIEW_DOWNLOADS;end" },
-            { name: "檔案選擇 (Get Content)", uri: "intent:#Intent;action=android.intent.action.GET_CONTENT;type=*/*;end" },
-            { name: "DocumentsUI (原生)", uri: "intent:#Intent;component=com.android.documentsui/.files.FilesActivity;end" },
-
-            // --- 其他可能入口 ---
-            { cat: "🔍 其他入口" },
-            { name: "關於平板 (About)", uri: "intent:#Intent;action=android.settings.DEVICE_INFO_SETTINGS;end" },
-            { name: "語言與輸入法", uri: "intent:#Intent;action=android.settings.INPUT_METHOD_SETTINGS;end" },
-            { name: "首頁 (Home)", uri: "intent:#Intent;action=android.intent.action.MAIN;category=android.intent.category.HOME;end" },
-            { name: "搜尋 (Search)", uri: "intent:#Intent;action=android.intent.action.WEB_SEARCH;end" }
-        ];
-
-        const container = document.getElementById('container');
-
-        targets.forEach(t => {
-            if (t.cat) {
-                let div = document.createElement('div');
-                div.className = 'category';
-                div.innerText = t.cat;
-                container.appendChild(div);
-            } else {
-                let a = document.createElement('a');
-                a.className = 'btn';
-                a.href = t.uri;
-                a.innerText = t.name;
-                a.onclick = function() { this.classList.add('visited'); };
-                container.appendChild(a);
+            if (!bridge) {
+                output.innerHTML = "❌ 錯誤：找不到 window.BooksComJsBridge\n請確認此頁面是在 BooksPad 上開啟。";
+                return;
             }
-        });
+
+            var log = "✅ 發現物件: window.BooksComJsBridge\n\n[可用功能]:\n";
+            var count = 0;
+
+            // 深度掃描屬性與方法
+            var props = [];
+            // 嘗試標準遍歷
+            for (var i in bridge) { props.push(i); }
+            // 嘗試獲取自身屬性 (針對不可枚舉屬性)
+            try {
+                var ownProps = Object.getOwnPropertyNames(bridge);
+                props = props.concat(ownProps);
+            } catch(e) {}
+
+            // 去除重複並排序
+            props = [...new Set(props)].sort();
+
+            props.forEach(function(prop) {
+                try {
+                    var type = typeof bridge[prop];
+                    log += "🔹 " + prop + " (" + type + ")\n";
+                    count++;
+                } catch(e) {
+                    log += "🔸 " + prop + " (未知)\n";
+                }
+            });
+
+            if (count === 0) {
+                log += "⚠️ 警告：物件存在但無法列舉屬性。\n這可能是 Java Interface 封裝。\n請直接嘗試盲測指令。";
+            }
+
+            output.innerHTML = log;
+        }
+
+        function runCmd() {
+            var cmd = document.getElementById('cmd').value;
+            try {
+                // 如果用戶沒有輸入完整路徑，自動補上前綴 (方便測試)
+                if (cmd.indexOf('window') === -1 && cmd.indexOf('(') !== -1) {
+                    // 嘗試直接執行 bridge 下的方法
+                    var funcName = cmd.split('(')[0];
+                    if (window.BooksComJsBridge[funcName]) {
+                        window.BooksComJsBridge[funcName](eval(cmd.split('(')[1].replace(')', ''))); 
+                        alert('已呼叫: ' + funcName);
+                        return;
+                    }
+                }
+                
+                // 標準 eval 執行
+                var result = eval(cmd);
+                alert("執行結果: " + result);
+            } catch (e) {
+                alert("執行錯誤: " + e.message);
+            }
+        }
+        
+        function fill(txt) {
+            document.getElementById('cmd').value = "window.BooksComJsBridge." + txt;
+        }
+
+        // 自動啟動掃描
+        setTimeout(analyzeBridge, 500);
     </script>
 </body>
 </html>
